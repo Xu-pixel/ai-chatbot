@@ -6,7 +6,6 @@ import {
   stepCountIs,
   streamText,
 } from 'ai';
-import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -43,6 +42,7 @@ import { fetchModels } from 'tokenlens/fetch';
 import { getUsage } from 'tokenlens/helpers';
 import type { ModelCatalog } from 'tokenlens/core';
 import type { AppUsage } from '@/lib/usage';
+import { auth } from '@/lib/get-session';
 
 export const maxDuration = 60;
 
@@ -113,16 +113,16 @@ export async function POST(request: Request) {
       return new ChatSDKError('unauthorized:chat').toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    // const userType: UserType = session.user.type;
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,
       differenceInHours: 24,
     });
 
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError('rate_limit:chat').toResponse();
-    }
+    // if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
+    //   return new ChatSDKError('rate_limit:chat').toResponse();
+    // }
 
     const chat = await getChatById({ id });
 
@@ -192,8 +192,14 @@ export async function POST(request: Request) {
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
+            createDocument: createDocument({
+              session,
+              dataStream,
+            }),
+            updateDocument: updateDocument({
+              session,
+              dataStream,
+            }),
             requestSuggestions: requestSuggestions({
               session,
               dataStream,
@@ -210,13 +216,19 @@ export async function POST(request: Request) {
                 myProvider.languageModel(selectedChatModel).modelId;
               if (!modelId) {
                 finalMergedUsage = usage;
-                dataStream.write({ type: 'data-usage', data: finalMergedUsage });
+                dataStream.write({
+                  type: 'data-usage',
+                  data: finalMergedUsage,
+                });
                 return;
               }
 
               if (!providers) {
                 finalMergedUsage = usage;
-                dataStream.write({ type: 'data-usage', data: finalMergedUsage });
+                dataStream.write({
+                  type: 'data-usage',
+                  data: finalMergedUsage,
+                });
                 return;
               }
 

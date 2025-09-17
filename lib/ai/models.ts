@@ -14,7 +14,7 @@ export const chatModels: Array<ChatModel> = [
   },
   {
     id: 'chat-model-reasoning',
-    name: 'Grok Reasoning',
+    name: '神农推理模型',
     description:
       'Uses advanced chain-of-thought reasoning for complex problems',
   },
